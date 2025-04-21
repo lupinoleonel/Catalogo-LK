@@ -83,8 +83,7 @@ body {
 .promo-price {
     font-size: 16px;
     font-weight: bold;
-    color: yellow;
-}
+    color: #B9184E; /* Color rosa mas intenso */}
 
 /* CSS */
 .search-container {
@@ -120,4 +119,50 @@ body {
 
 .search-container button:hover {
     background-color: #FF69B4;
+}
+
+.main-banner img {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 20px;
+    display: block;
+    margin-bottom: 30px;
+}
+
+/* Título de bienvenida */
+.menu-botones h1 {
+    font-size: 2.2rem;
+    color: #F25400; /* Color naranja */
+    text-align: center;
+    margin: 20px 0 30px;
+    font-weight: 600;
+}
+
+/* Botones */
+.botones {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 0 20px;
+}
+
+.boton-principal {
+    background-color: #DB5552; 
+    color: #fff;
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 20px;
+    text-decoration: none;
+    border: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.boton-principal:hover {
+    background-color: #F25400; /* Color naranja */
+    transform: translateY(-2px);
 }
