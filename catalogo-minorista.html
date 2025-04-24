@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo Minoristas LK</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/styles.css">
 </head>
 
 <body>
     <header class="banner">
-        <img src="Banner.png" alt="Banner de la tienda">
+        <img src="img/Banner.png" alt="Banner de la tienda">
     </header>
 
     <div class="search-container">
@@ -57,7 +57,7 @@
                         nombre: row.c[1]?.v || "Sin nombre",
                         precio: row.c[2]?.v || 0,
                         precioPromo: row.c[3]?.v || 0,
-                        imagen: row.c[5]?.v || "",
+                        imagen: row.c[5]?.v && row.c[5].v.trim() !== "" ? row.c[5].v : "img/imagen-generica.png",
                         stock: row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "Sin Stock"
                     };
 
@@ -69,7 +69,7 @@
                         productDiv.className = 'product';
 
                         productDiv.innerHTML = `
-                    <img src="${item.imagen}" alt="${item.nombre}">
+                    <img src="${item.imagen}" alt="${item.nombre}" onerror="this.onerror=null; this.src='img/imagen-generica.png';">
                     <h3>${item.nombre}</h3>
                     <div class="price-container">
                         <p class="price">Precio: $${item.precio}</p>
