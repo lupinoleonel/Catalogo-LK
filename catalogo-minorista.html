@@ -1,100 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Minoristas LK</title>
-    <link rel="stylesheet" href="styles/styles.css">
-</head>
-
-<body>
-    <header class="banner">
-        <img src="img/Banner.png" alt="Banner de la tienda">
-    </header>
-
-    <div class="search-container">
-        <input type="text" id="search" placeholder="Buscar productos..." onkeyup="filterProducts()">
-        <button type="button" onclick="filterProducts()">🔍</button>
-    </div>
-
-    <div class="catalog-container">
-        <!-- Los productos se cargan aca automaticamente -->
-        <div id="products"></div>
-    </div>
-
-    <script>
-        // URL del Google Sheet publicado en formato JSON
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/15MHZbOJQ6-cHp1eTilX2pjMwpj3UrKL7s2_3v0LjjT4/gviz/tq?tqx=out:json&sheet=Lista';
-
-        // Filtrar productos por nombre
-        function filterProducts() {
-            const searchTerm = document.getElementById("search").value.toLowerCase();
-            const products = document.querySelectorAll(".product");
-
-            products.forEach(product => {
-                const name = product.querySelector("h3").textContent.toLowerCase();
-                product.style.display = name.includes(searchTerm) ? "block" : "none";
-            });
-        }
-
-        async function loadProducts() {
-            try {
-                const response = await fetch(sheetURL);
-                const text = await response.text();
-
-                // Limpiar el texto extra y obtener solo el JSON válido
-                const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                const jsonData = JSON.parse(jsonText);
-
-                // Obtener los datos de la hoja de cálculo
-                const rows = jsonData.table.rows;
-                const productsContainer = document.getElementById('products');
-                productsContainer.innerHTML = ''; // Limpiar el contenedor
-
-                rows.forEach(row => {
-                    const item = {
-                        nombre: row.c[1]?.v || "Sin nombre",
-                        precio: row.c[2]?.v || 0,
-                        precioPromo: row.c[3]?.v || 0,
-                        imagen: row.c[5]?.v && row.c[5].v.trim() !== "" ? row.c[5].v : "img/imagen-generica.png",
-                        stock: row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "Sin Stock"
-                    };
-
-                    console.log("Stock del producto:", item.stock);
-
-                    // Mostrar solo productos que NO contengan "sin stock"
-                    if (!item.stock.includes("Sin Stock")) {
-                        const productDiv = document.createElement('div');
-                        productDiv.className = 'product';
-
-                        productDiv.innerHTML = `
-                    <img src="${item.imagen}" alt="${item.nombre}" onerror="this.onerror=null; this.src='img/imagen-generica.png';">
-                    <h3>${item.nombre}</h3>
-                    <div class="price-container">
-                        <p class="price">Precio: $${item.precio}</p>
-                        <p class="promo-price">Promo (3+): $${item.precioPromo}</p>
-                    </div>
-                `;
-                        productsContainer.appendChild(productDiv);
-                    }
-                });
-            } catch (error) {
-                console.error('Error cargando productos:', error);
-            }
-        }
-
-        // Cargar productos al iniciar
-        window.onload = loadProducts;
-    </script>
-</body>
-
-</html>
-
-
-
-
-
 <!-- Lion Kids CBA - Página de inicio -->
 <!-- Lion Kids CBA - Catálogo de Revendedores -->
 <!DOCTYPE html>
@@ -109,9 +12,13 @@
 </head>
 
 <body>
-    <header class="banner">
-        <img src="img/banner.png" alt="Banner">
+    <header>
+        <img src="img/logo-lionkids.png" alt="Lion Kids CBA">
     </header>
+
+    <section class="banner">
+        <img src="img/banner.png" alt="Banner">
+    </section>
 
     <!-- Botones de categoría -->
     <div class="categoria-selector">
@@ -184,13 +91,13 @@
             productsContainer.innerHTML = '';
 
             rows.forEach(row => {
-                    const item = {
-                        nombre: row.c[1]?.v || "Sin nombre",
-                        precio: row.c[2]?.v || 0,
-                        precioPromo: row.c[3]?.v || 0,
-                        imagen: row.c[5]?.v && row.c[5].v.trim() !== "" ? row.c[5].v : "img/imagen-generica.png",
-                        stock: row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "Sin Stock"
-                    };
+                const item = {
+                    nombre: row.c[1]?.v || "Sin nombre",
+                    precio: row.c[2]?.v || 0,
+                    precioPromo: row.c[3]?.v || 0,
+                    imagen: row.c[5]?.v && row.c[5].v.trim() !== "" ? row.c[5].v : "img/imagen-generica.png",
+                    stock: row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "Sin Stock"
+                };
 
                 if (!item.stock.includes("Sin Stock")) {
                     const productDiv = document.createElement('div');
@@ -284,6 +191,16 @@
             document.documentElement.scrollTop = 0;
         };
     </script>
+
+    <footer>
+        <p>Contacto: lionkidscba@gmail.com | WhatsApp: +54 9 351 200 9221</p>
+        <p>Síguenos en:
+            <a href="https://www.instagram.com/lionkidscba" target="_blank">Instagram</a> |
+            <a href="https://www.facebook.com/lionkids.cba" target="_blank">Facebook</a>
+        </p>
+        <p>© 2025 Lion Kids CBA. Todos los derechos reservados.</p>
+    </footer>
+
 </body>
 
 </html>
