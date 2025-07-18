@@ -1,5 +1,8 @@
 
-// config.js
+// --- CONFIGURACIÓN CENTRAL ---
+const GOOGLE_SHEET_ID = '15MHZbOJQ6-cHp1eTilX2pjMwpj3UrKL7s2_3v0LjjT4';
+const LOW_STOCK_THRESHOLD = 5;
+// -----------------------------
 
 // Obtener parámetros de la URL
 const params = new URLSearchParams(window.location.search);
@@ -16,16 +19,21 @@ if (tipo) {
 // Ahora sí podemos usar 'tipo' correctamente en el resto del archivo
 const esMinorista = tipo === 'minorista';
 
-// Textos personalizados según el tipo
+// Define texto personalizado según el tipo de catálogo
 const textos = {
-  titulo: esMinorista ? 'Catálogo Minorista' : 'Catálogo Revendedor',
-  precio: esMinorista ? 'Precio efectivo/transferencia' : 'Precio revendedor',
-  tipo
+  mayorista: {
+      titulo: "Catálogo Revendedores",
+      tituloPagina: "Lion Kids (Revendedores)",
+      etiquetaPrecio: "Revendedor",
+      etiquetaPromo: "$ Sugerido de venta"
+  },
+  minorista: {
+      titulo: "Catálogo Minorista",
+      tituloPagina: "Lion Kids (Minoristas)",
+      etiquetaPrecio: "Precio",
+      etiquetaPromo: "3 artículos surtidos"
+  }
 };
-
-document.title = textos.titulo;
-document.querySelector('[data-titulo]').textContent = textos.titulo;
-document.querySelector('[data-precio-label]').textContent = textos.precio;
 
 
 

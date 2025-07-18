@@ -1,293 +1,331 @@
-window.addEventListener('DOMContentLoaded', () => {
-    document.title = tipo === 'mayorista' ? "Lion Kids (Revendedores)" : "Lion Kids (Minoristas)";
-    const titulo = document.getElementById("catalogo-title");
-    if (titulo) {
-        titulo.innerText = tipo === 'mayorista' ? "Catálogo para Revendedores" : "Catálogo Minorista";
-    }
-});
+// =================================================================
+// ESTADO Y CONFIGURACIÓN DEL CATÁLOGO
+// =================================================================
 
-// Función para mostrar el menú al hacer clic en el botón de menú
-document.addEventListener('DOMContentLoaded', function () {
-    const toggleButton = document.getElementById('menu-toggle');
-    const menu = document.getElementById('menu');
-
-    if (toggleButton && menu) {
-        toggleButton.addEventListener('click', function () {
-            menu.classList.toggle('active');
-        });
-    }
-});
-
-// Script principal
-let currentSheet = 'Indumentaria';
-
-function cambiarCategoria(elemento, categoria) {
-    currentSheet = categoria;
-    subcategoriaSeleccionada = "TODOS"; // Reset subcategoría
-    document.getElementById("subcategoria").value = "TODOS"; // Actualiza selector visual
-    actualizarActivos('categoria-selector', elemento);
-    actualizarActivos('subcategoria-selector', null);
-    history.pushState({ categoria }, '', `?cat=${categoria}`);
-    loadProducts();
-}
-
-
-// Función para seleccionar subcategorías
-function filterProducts() {
-    const searchTerm = document.getElementById("search").value.toLowerCase();
-    const filtros = subcategorias[subcategoriaSeleccionada] || [];
-    history.pushState({ categoria: currentSheet, subcategoria: subcategoriaSeleccionada, search: searchTerm }, '', `?cat=${currentSheet}&subcat=${subcategoriaSeleccionada}&search=${encodeURIComponent(searchTerm)}`);
-
-    const products = document.querySelectorAll(".product");
-    products.forEach(product => {
-        const name = product.querySelector("h4").textContent.toLowerCase();
-        product.style.display = name.includes(searchTerm) ? "block" : "none";
-    });
-}
-
-// Función para seleccionar subcategoría desde el menú desplegable
-function filterProducts() {
-    const searchTerm = document.getElementById("search").value.toLowerCase();
-    const filtros = subcategorias[subcategoriaSeleccionada] || [];
-    history.pushState({ categoria: currentSheet, subcategoria: subcategoriaSeleccionada, search: searchTerm }, '', `?cat=${currentSheet}&subcat=${subcategoriaSeleccionada}&search=${encodeURIComponent(searchTerm)}`);
-
-    const products = document.querySelectorAll(".product");
-    products.forEach(product => {
-        const name = product.querySelector("h4").textContent.toLowerCase();
-        product.style.display = name.includes(searchTerm) ? "block" : "none";
-    });
-}
-
-// Manejo del botón atrás del navegador
-window.addEventListener('popstate', function (event) {
-    const params = new URLSearchParams(location.search);
-    const cat = params.get('cat') || 'Indumentaria';
-    const subcat = params.get('subcat') || 'TODOS';
-    const search = params.get('search') || '';
-
-    currentSheet = cat;
-    subcategoriaSeleccionada = subcat;
-
-    // Actualizar buscador
-    document.getElementById("search").value = search;
-    // Actualizar subcategoría
-    document.getElementById("subcategoria").value = subcat;
-
-
-    // Actualizar botones visuales
-    const catContainer = document.getElementsByClassName('categoria-selector')[0];
-    if (catContainer) {
-        const botones = catContainer.getElementsByTagName('button');
-        for (let boton of botones) {
-            boton.classList.toggle('active', boton.textContent.trim().toLowerCase() === cat.toLowerCase());
-        }
-    }
-
-    const subcatContainer = document.getElementsByClassName('subcategoria-selector')[0];
-    if (subcatContainer) {
-        const botones = subcatContainer.getElementsByTagName('button');
-        for (let boton of botones) {
-            boton.classList.toggle('active', boton.textContent.toUpperCase().includes(subcat));
-        }
-    }
-
-    // Recargar productos filtrados
-    loadProducts();
-});
-
-
-
-// Cargar productos desde Google Sheets
-async function loadProducts() {
-    const baseURL = 'https://docs.google.com/spreadsheets/d/15MHZbOJQ6-cHp1eTilX2pjMwpj3UrKL7s2_3v0LjjT4/gviz/tq?tqx=out:json&sheet=';
-    const response = await fetch(baseURL + currentSheet);
-    const text = await response.text();
-    const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-    const jsonData = JSON.parse(jsonText);
-    const rows = jsonData.table.rows;
-
-    const productsContainer = document.getElementById('products');
-    productsContainer.innerHTML = '';
-
-    rows.forEach(row => {
-        const item = {
-            nombre: row.c[1]?.v || "Sin nombre",
-            precio: tipo === 'mayorista' ? row.c[4]?.v || 0 : row.c[2]?.v || 0,
-            precioPromo: tipo === 'mayorista' ? row.c[2]?.v || 0 : row.c[3]?.v || 0,
-            imagen: row.c[5]?.v && row.c[5].v.trim() !== "" ? row.c[5].v : "img/imagen-generica.png",
-            stock: row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "sin stock"
-        };
-        const tipoPrenda = row.c[0]?.v ? row.c[0].v.substring(0, 4).toUpperCase() : "";
-        const filtros = subcategorias[subcategoriaSeleccionada] || [];
-
-        if (subcategoriaSeleccionada !== "TODOS" && !filtros.includes(tipoPrenda)) {
-            return; // Si no está en los filtros permitidos, NO lo mostramos
-        }
-
-
-        if (!item.stock.toLowerCase().includes("sin stock")) {
-            const productDiv = document.createElement('div');
-            productDiv.className = 'product';
-
-            productDiv.innerHTML = `
-                    <img src="${item.imagen}" alt="${item.nombre}" onerror="this.onerror=null; this.src='img/imagen-generica.png';">
-                    <h4>${item.nombre}</h4>
-                    <div class="price-container">
-                    <p class="price">${tipo === 'mayorista' ? 'Precio Revendedor' : 'Precio'}: $${formatPrice(item.precio)}</p>
-                    <p class="promo-price">${tipo === 'mayorista' ? 'Precio Sugerido' : '3 o mas articulos'}: $${formatPrice(item.precioPromo)}</p>
-                    </div>
-                `;
-            productsContainer.appendChild(productDiv);
-        }
-    });
-}
-function formatPrice(value) {
-    if (!value) return '0';
-    return parseFloat(value).toLocaleString('es-AR'); // Formato argentino
-}
-
-
-// Carga inicial desde parámetros en la URL
-
-let subcategoriaSeleccionada = "TODOS";
+let state = {
+    currentSheet: 'Indumentaria',
+    subcategoria: 'TODOS',
+    searchTerm: ''
+};
 
 const subcategorias = {
-    "TODOS": [],
-    "CONJUNTOS": ["CONJ", "VEST", "MONO",],
-    "BUZOS": ["BUZO", "CANG", "SUET"],
-    "CAMPERAS": ["CAMP", "PARK", "ROMP", "CHAQ", "CHAL", "PUFF", "ANOR", "TAPA", "CARD",],
-    "REMERAS": ["REME", "MUSC", "CAMI", "CHOM",],
-    "PANTALONES": ["PANT", "JEAN", "JOGG", "CARG", "BABU", "CHIN", "PALA",],
-    "CALZAS": ["CALZ", "BIKE", "CAPR",],
-    "SHORTS": ["BERM", "BERR", "SHOR",],
-    "MALLAS": ["MALL", "BIKI", "ENTE", "TOAL",],
-    "ACCESORIOS": ["GORR", "PILU", "PELU", "PIJA", "TOPJ", "TOPD", "MEDI",],
-    "MOCHILAS": ["MOCH",]
+    "TODOS": [], "CONJUNTOS": ["CONJ", "VEST", "MONO"], "BUZOS": ["BUZO", "CANG", "SUET"], "CAMPERAS": ["CAMP", "PARK", "ROMP", "CHAQ", "CHAL", "PUFF", "ANOR", "TAPA", "CARD"], "REMERAS": ["REME", "MUSC", "CAMI", "CHOM"], "PANTALONES": ["PANT", "JEAN", "JOGG", "CARG", "BABU", "CHIN", "PALA"], "CALZAS": ["CALZ", "BIKE", "CAPR"], "SHORTS": ["BERM", "BERR", "SHOR"], "MALLAS": ["MALL", "BIKI", "ENTE", "TOAL"], "ACCESORIOS": ["GORR", "PILU", "PELU", "PIJA", "TOPJ", "TOPD", "MEDI"], "MOCHILAS": ["MOCH"]
 };
 
-// Función para filtrar subcategoría
-function filtrarSubcategoria(subcat, elemento) {
-    subcategoriaSeleccionada = subcat;
-    actualizarActivos('subcategoria-selector', elemento);
-    const searchTerm = document.getElementById("search").value.toLowerCase();
-    history.pushState({ categoria: currentSheet, subcategoria: subcategoriaSeleccionada, search: searchTerm }, '', `?cat=${currentSheet}&subcat=${subcat}&search=${encodeURIComponent(searchTerm)}`);
-    loadProducts();
-}
+// =================================================================
+// SELECTORES DEL DOM (cacheados para eficiencia)
+// =================================================================
 
-// Función para seleccionar subcategoría desde el menú desplegable
-function seleccionarSubcategoriaDesdeMenu() {
-    const select = document.getElementById("subcategoria");
-    const subcat = select.value;
-
-    subcategoriaSeleccionada = subcat;
-
-    // Guardamos en la URL
-    const searchTerm = document.getElementById("search").value.toLowerCase();
-    history.pushState(
-        { categoria: currentSheet, subcategoria: subcat, search: searchTerm },
-        '',
-        `?cat=${currentSheet}&subcat=${subcat}&search=${encodeURIComponent(searchTerm)}`
-    );
-
-    loadProducts();
-}
-
-// Función que actualiza los botones activos
-function actualizarActivos(selectorClass, elementoActivo) {
-    const container = document.getElementsByClassName(selectorClass)[0];
-    if (container) {
-        const botones = container.getElementsByTagName('button');
-        for (let boton of botones) {
-            boton.classList.remove('active');
-        }
-        if (elementoActivo) {
-            elementoActivo.classList.add('active');
-        }
-    }
-}
-
-window.onload = () => {
-    const params = new URLSearchParams(location.search);
-    const cat = params.get('cat') || 'Indumentaria';
-    const search = params.get('search') || '';
-
-    currentSheet = cat;
-
-    loadProducts().then(() => {
-        document.getElementById("search").value = search;
-        filterProducts();
-    });
+const dom = {
+    title: document.getElementById('title'),
+    catalogoTitle: document.getElementById('catalogo-title'), // Si existe
+    menuToggle: document.getElementById('menu-toggle'),
+    menu: document.getElementById('menu'),
+    banners: {
+        minIndu: document.getElementById('banner-minorista-indumentaria'),
+        minCalzado: document.getElementById('banner-minorista-calzado'),
+        mayIndu: document.getElementById('banner-mayorista-indumentaria'),
+        mayCalzado: document.getElementById('banner-mayorista-calzado')
+    },
+    categoriaSelector: document.querySelector('.categoria-selector'),
+    subcategoriaSelector: document.querySelector('.subcategoria-selector'),
+    subcategoriaSelect: document.getElementById('subcategoria-select'),
+    subcategoriaContainer: document.querySelector('.subcategoria-selector'),
+    subcategoriaContainerMovil: document.querySelector('.subcategoria-selector-movil'),
+    searchInput: document.getElementById('search'),
+    searchButton: document.getElementById('search-button'),
+    clearSearchBtn: document.getElementById('clear-search-btn'),
+    productsContainer: document.getElementById('products'),
+    modal: document.getElementById('imgModal'),
+    modalImg: document.querySelector("#imgModal img"),
+    scrollTopBtn: document.getElementById('scrollTopBtn')
 };
 
-// Ampliar imagen al hacer click y mostrar en modal
-const modal = document.getElementById("imgModal");
-const modalImg = modal.querySelector("img");
+// =================================================================
+// FUNCIONES DE RENDERIZADO Y UI
+// =================================================================
 
-document.addEventListener("click", function (e) {
-    if (e.target.tagName === "IMG" && e.target.closest(".product")) {
-        modalImg.src = e.target.src;
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
+function updateUI() {
+    // Títulos
+    dom.title.textContent = textos[tipo].tituloPagina;
+    if (dom.catalogoTitle) dom.catalogoTitle.textContent = textos[tipo].titulo;
 
-        // Agrega una entrada al historial para detectar cuando se toca "atrás"
-        history.pushState({ modalOpen: true }, "", "#modal");
+    // Banner
+    Object.values(dom.banners).forEach(banner => banner.classList.add('hidden'));
+    if (state.currentSheet === 'Indumentaria') {
+        dom.banners[tipo === 'minorista' ? 'minIndu' : 'mayIndu'].classList.remove('hidden');
+    } else if (state.currentSheet === 'Calzado') {
+        dom.banners[tipo === 'minorista' ? 'minCalzado' : 'mayCalzado'].classList.remove('hidden');
     }
-});
 
-// Manejo del cierre del modal
-modal.addEventListener("click", function (e) {
-    if (e.target === modal) cerrarModal();
-});
-
-document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && modal.style.display === "flex") cerrarModal();
-});
-
-function cerrarModal() {
-    modal.style.display = "none";
-    modalImg.src = "";
-    document.body.style.overflow = "";
-
-    // Si estamos en el historial del modal, retrocede
-    if (location.hash === "#modal") history.back();
-}
-
-// Manejo del cierre del modal al usar el botón "atrás"
-// Si el usuario toca atrás cuando el modal está abierto, lo cerramos
-window.addEventListener("popstate", function (event) {
-    if (location.hash === "" && modal.style.display === "flex") {
-        cerrarModal();
-    }
-});
-
-// Botón para volver al inicio de la página
-const scrollTopBtn = document.getElementById("scrollTopBtn");
-
-window.onscroll = function () {
-    if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
-        scrollTopBtn.style.display = "block";
+    // Visibilidad de subcategorías
+    const showSubcats = state.currentSheet !== 'Calzado';
+    if (showSubcats) {
+        dom.subcategoriaContainer.style.display = ''; // Deja que el CSS controle
+        dom.subcategoriaContainerMovil.style.display = ''; // Deja que el CSS controle
     } else {
-        scrollTopBtn.style.display = "none";
+        dom.subcategoriaContainer.style.display = 'none';
+        dom.subcategoriaContainerMovil.style.display = 'none';
     }
-};
 
-scrollTopBtn.onclick = function () {
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-};
+    // Botones activos
+    updateActiveButtons(dom.categoriaSelector, '[data-categoria]', state.currentSheet);
+    updateActiveButtons(dom.subcategoriaSelector, '[data-subcat]', state.subcategoria);
+    dom.subcategoriaSelect.value = state.subcategoria;
 
-// Indicador de carga
-document.getElementById('products').innerHTML = '<p class="loading">Cargando productos...</p>';
+    // Cargar productos
+    loadProducts();
+}
 
-fetch(DATA_URL)
-    .then(response => response.json())
-    .then(data => {
-        productsData = data;
-        renderProducts(productsData);
-    })
-    .catch(error => {
-        document.getElementById('products').innerHTML = '<p class="error">Error al cargar productos</p>';
-        console.error('Error cargando productos:', error);
+function updateActiveButtons(container, selector, activeValue) {
+    if (!container) return;
+    container.querySelectorAll(selector).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.categoria === activeValue || btn.dataset.subcat === activeValue);
+    });
+}
+
+function generateProductHTML(item) {
+    const lowStockLabel = item.isLowStock ? '<div class="low-stock-label">¡Últimas unidades!</div>' : '';
+
+    return `
+        ${lowStockLabel}
+        <img src="${item.imagen}" alt="${item.nombre}" loading="lazy" onerror="this.onerror=null; this.src='img/imagen-generica.png';">
+        <h4>${item.nombre}</h4>
+        <div class="price-container">
+            <p class="price">${textos[tipo].etiquetaPrecio}: $${formatPrice(item.precio)}</p>
+            <p class="promo-price">${textos[tipo].etiquetaPromo}: $${formatPrice(item.precioPromo)}</p>
+        </div>
+    `;
+}
+
+function formatPrice(value) {
+    if (!value) return '0';
+    return parseFloat(value).toLocaleString('es-AR');
+}
+
+// --- NUEVA FUNCIÓN PARA CAPITALIZAR TEXTO ---
+function capitalizarPalabras(texto) {
+    // Si el texto está vacío, devuelve una cadena vacía para evitar errores.
+    if (!texto) return '';
+
+    // 1. Pone todo el texto en minúsculas (ej: "campera de niño")
+    return texto.toLowerCase()
+        // 2. Separa el texto en un array de palabras (ej: ["campera", "de", "niño"])
+        .split(' ')
+        // 3. Itera sobre cada palabra y pone su primera letra en mayúscula
+        .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+        // 4. Une las palabras de nuevo en una sola cadena de texto
+        .join(' '); // Resultado: "Campera De Niño"
+}
+
+function abrirModalImagen(rutaImagen) {
+    dom.modalImg.src = rutaImagen;
+    dom.modal.style.display = 'flex';
+    dom.modal.setAttribute('aria-hidden', 'false'); // Hacemos el modal visible para lectores de pantalla
+    dom.modal.focus(); // Ponemos el foco en el modal
+}
+
+function cerrarModalImagen() {
+    dom.modal.style.display = 'none';
+    dom.modal.setAttribute('aria-hidden', 'true'); // Lo ocultamos de nuevo
+    dom.modalImg.src = ""; // Limpiamos la imagen
+}
+
+// =================================================================
+// LÓGICA DE DATOS (FETCH)
+// =================================================================
+
+async function loadProducts() {
+    dom.productsContainer.innerHTML = '<p class="loading">Cargando productos...</p>';
+    const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${state.currentSheet}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Error de red o la hoja "${state.currentSheet}" no existe.`);
+
+        const text = await response.text();
+        const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const data = JSON.parse(jsonText);
+
+        if (!data.table || !data.table.rows || data.table.rows.length === 0) {
+            dom.productsContainer.innerHTML = '<p>No hay productos disponibles en esta categoría.</p>';
+            return;
+        }
+
+        const productFragment = document.createDocumentFragment();
+        let productsAdded = 0;
+
+        data.table.rows.forEach(row => {
+            if (!row || !row.c) return;
+
+            const stockValue = row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "sin stock";
+            
+            // Lógica de stock mejorada
+            if (stockValue === "sin stock") {
+                return; // Si dice "sin stock", no lo mostramos y saltamos al siguiente.
+            }
+
+            const item = {
+                nombre: capitalizarPalabras(row.c[1]?.v || "Sin nombre"),
+                precio: tipo === 'mayorista' ? row.c[4]?.v : row.c[2]?.v,
+                precioPromo: tipo === 'mayorista' ? row.c[2]?.v : row.c[3]?.v,
+                imagen: row.c[5]?.v || "img/imagen-generica.png",
+                stock: stockValue,
+                tipoPrenda: row.c[0]?.v ? String(row.c[0].v).substring(0, 4).toUpperCase() : ""
+            };
+
+            // Verificamos si tiene stock bajo
+            const stockNumerico = parseFloat(item.stock);
+            item.isLowStock = !isNaN(stockNumerico) && stockNumerico <= LOW_STOCK_THRESHOLD;
+
+            const inSearch = item.nombre.toLowerCase().includes(state.searchTerm.toLowerCase());
+            const inSubcat = state.subcategoria === "TODOS" || subcategorias[state.subcategoria]?.includes(item.tipoPrenda);
+            
+            if (inSearch && inSubcat) {
+                const productDiv = document.createElement('div');
+                // Añadimos la clase 'low-stock' si corresponde
+                productDiv.className = `product ${item.isLowStock ? 'low-stock' : ''}`;
+                productDiv.innerHTML = generateProductHTML(item);
+                productFragment.appendChild(productDiv);
+                productsAdded++;
+            }
+        });
+
+        dom.productsContainer.innerHTML = '';
+        if (productsAdded > 0) {
+            dom.productsContainer.appendChild(productFragment);
+        } else {
+            dom.productsContainer.innerHTML = '<p>No se encontraron productos con esos filtros.</p>';
+        }
+
+    } catch (error) {
+        console.error('Error al cargar productos:', error);
+        dom.productsContainer.innerHTML = `<p class="error">No se pudieron cargar los productos. Revisa la consola para más detalles.</p>`;
+    }
+}
+
+// =================================================================
+// MANEJADORES DE EVENTOS
+// =================================================================
+
+function setupEventListeners() {
+    // Menú hamburguesa
+    dom.menuToggle.addEventListener('click', () => dom.menu.classList.toggle('active'));
+
+    // Selectores de categoría
+    dom.categoriaSelector.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') {
+            state.currentSheet = e.target.dataset.categoria;
+            state.subcategoria = 'TODOS';
+            updateHistory();
+            updateUI();
+        }
+    });
+
+    // Selectores de subcategoría (botones y select)
+    dom.subcategoriaSelector.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') {
+            state.subcategoria = e.target.dataset.subcat;
+            updateHistory();
+            updateUI();
+        }
+    });
+
+    dom.subcategoriaSelect.addEventListener('change', () => {
+        state.subcategoria = dom.subcategoriaSelect.value;
+        updateHistory();
+        updateUI();
+    });
+
+        // --- LÓGICA DE BÚSQUEDA ---
+    function performSearch() {
+        state.searchTerm = dom.searchInput.value;
+        updateHistory();
+        loadProducts(); // No recarga toda la UI, solo filtra productos
+    }
+
+    dom.searchButton.addEventListener('click', performSearch);
+    dom.searchInput.addEventListener('keyup', e => {
+        dom.searchInput.parentElement.classList.toggle('search-has-text', dom.searchInput.value.length > 0);
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    dom.clearSearchBtn.addEventListener('click', () => {
+        dom.searchInput.value = '';
+        dom.searchInput.parentElement.classList.remove('search-has-text');
+        performSearch();
+    });
+    // --- FIN DE LÓGICA DE BÚSQUEDA ---
+
+    // Modal de imagen
+    dom.productsContainer.addEventListener('click', e => {
+        if (e.target.tagName === 'IMG' && e.target.closest('.product')) {
+            abrirModalImagen(e.target.src);
+        }
+    });
+
+    dom.modal.addEventListener('click', (e) => {
+        // Cierra el modal solo si se hace clic en el fondo oscuro
+        if (e.target === dom.modal) {
+            cerrarModalImagen();
+        }
+    });
+    
+    // Añadimos cierre con la tecla 'Escape'
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && dom.modal.style.display === 'flex') {
+            cerrarModalImagen();
+        }
     });
 
 
+    // Botón de subir
+    window.addEventListener('scroll', () => {
+        const show = window.scrollY > 500;
+        dom.scrollTopBtn.style.display = show ? 'flex' : 'none';
+    });
+    dom.scrollTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Botón atrás del navegador
+    window.addEventListener('popstate', () => {
+        // Si el modal está abierto y el usuario navega hacia atrás, lo cerramos
+        if (dom.modal.style.display === 'flex') {
+            cerrarModalImagen();
+        } else {
+            initStateFromURL();
+            updateUI();
+        }
+    });
+}
+
+// =================================================================
+// INICIALIZACIÓN
+// =================================================================
+
+function updateHistory() {
+    const params = new URLSearchParams();
+    params.set('tipo', tipo);
+    params.set('cat', state.currentSheet);
+    params.set('subcat', state.subcategoria);
+    if (state.searchTerm) params.set('search', state.searchTerm);
+    history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+}
+
+function initStateFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    state.currentSheet = params.get('cat') || 'Indumentaria';
+    state.subcategoria = params.get('subcat') || 'TODOS';
+    state.searchTerm = params.get('search') || '';
+    dom.searchInput.value = state.searchTerm;
+}
+
+// Arranca todo
+document.addEventListener('DOMContentLoaded', () => {
+    initStateFromURL();
+    setupEventListeners();
+    updateUI();
+});

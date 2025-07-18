@@ -2,7 +2,6 @@
 <!-- Lion Kids CBA - Catálogo de Revendedores -->
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,90 +9,89 @@
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
     <header>
         <img src="img/logo-lionkids.png" alt="Lion Kids CBA">
         <nav>
-            <!-- Botón hamburguesa (solo visible en móvil) -->
             <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú">
                 <i class="fa-solid fa-bars"></i>
             </button>
-
-            <!-- Enlaces de navegación -->
             <ul id="menu" class="nav-links">
                 <li><a href="index.html">Inicio</a></li>
                 <li><a href="catalogo.html?tipo=minorista">Minoristas</a></li>
                 <li><a href="catalogo.html?tipo=mayorista">Revendedores</a></li>
-                <li><a href="#">Tienda Online (Próximamente)</a></li>
+                <li><a href="https://lionkids.com.ar/" target="_blank" rel="noopener noreferrer">Tienda Online</a></li>
             </ul>
-
         </nav>
     </header>
 
     <section class="banner">
-        <img src="img/banner.png" alt="Banner">
+        <img src="img/banner-mino.png" alt="Banner Minorista Indumentaria" id="banner-minorista-indumentaria" class="banner-img hidden">
+        <img src="img/banner-zapas-mino.png" alt="Banner Minorista Calzado" id="banner-minorista-calzado" class="banner-img hidden">
+        <img src="img/banner-mayo.png" alt="Banner Mayorista Indumentaria" id="banner-mayorista-indumentaria" class="banner-img hidden">
+        <img src="img/banner-zapas-mayo.png" alt="Banner Mayorista Calzado" id="banner-mayorista-calzado" class="banner-img hidden">
     </section>
 
-    <!-- Botones de categoría -->
-    <div class="categoria-selector">
-        <button onclick="cambiarCategoria(this, 'Indumentaria')">Indumentaria</button>
-        <button onclick="cambiarCategoria(this, 'Calzado')">Calzado (Proximamente)</button>
+    <div class="controls-container">
+        <div class="categoria-selector">
+            <button data-categoria="Indumentaria">Indumentaria</button>
+            <button data-categoria="Calzado">Calzado</button>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Buscar productos...">
+            <button type="button" id="clear-search-btn" title="Limpiar búsqueda">&times;</button>
+            <button type="button" id="search-button"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+
+        <div class="subcategoria-selector">
+            <button data-subcat="TODOS">Todos</button>
+            <button data-subcat="CONJUNTOS">Conjuntos</button>
+            <button data-subcat="BUZOS">Buzos</button>
+            <button data-subcat="CAMPERAS">Camperas</button>
+            <button data-subcat="REMERAS">Remeras</button>
+            <button data-subcat="PANTALONES">Pantalones</button>
+            <button data-subcat="CALZAS">Calzas</button>
+            <button data-subcat="MALLAS">Mallas</button>
+            <button data-subcat="SHORTS">Shorts</button>
+            <button data-subcat="ACCESORIOS">Accesorios</button>
+            <button data-subcat="MOCHILAS">Mochilas</button>
+        </div>
+
+        <div class="subcategoria-selector-movil">
+            <select id="subcategoria-select">
+                <option value="TODOS">Todas las subcategorías</option>
+                <option value="CONJUNTOS">Conjuntos</option>
+                <option value="BUZOS">Buzos</option>
+                <option value="CAMPERAS">Camperas / Rompevientos</option>
+                <option value="REMERAS">Remeras / Camisetas</option>
+                <option value="PANTALONES">Cargos / Jeans / Joggings</option>
+                <option value="CALZAS">Calzas</option>
+                <option value="MALLAS">Mallas</option>
+                <option value="SHORTS">Bermudas / Shorts</option>
+                <option value="ACCESORIOS">Accesorios</option>
+                <option value="MOCHILAS">Mochilas</option>
+            </select>
+        </div>
     </div>
 
-    <!-- Barra de búsqueda -->
-    <div class="search-container">
-
-        <input type="text" id="search" placeholder="Buscar productos..." onkeyup="filterProducts()">
-        <button type="button" onclick="filterProducts()"><i class="fa-solid fa-magnifying-glass"></i></button>
-    </div>
-
-    <!-- Botones de subcategoría -->
-    <div class="subcategoria-selector" id="subcategoriaSelector">
-        <button onclick="filtrarSubcategoria('TODOS',  this)">Todos</button>
-        <button onclick="filtrarSubcategoria('CONJUNTOS', this)">Conjuntos</button>
-        <button onclick="filtrarSubcategoria('BUZOS', this)">Buzos</button>
-        <button onclick="filtrarSubcategoria('CAMPERAS', this)">Camperas</button>
-        <button onclick="filtrarSubcategoria('REMERAS', this)">Remeras</button>
-        <button onclick="filtrarSubcategoria('PANTALONES', this)">Pantalones</button>
-        <button onclick="filtrarSubcategoria('CALZAS', this)">Calzas</button>
-        <button onclick="filtrarSubcategoria('MALLAS', this)">Mallas</button>
-        <button onclick="filtrarSubcategoria('SHORTS', this)">Shorts</button>
-        <button onclick="filtrarSubcategoria('ACCESORIOS', this)">Accesorios</button>
-        <button onclick="filtrarSubcategoria('MOCHILAS', this)">Mochilas</button>
-    </div>
-
-    <!-- Selector de subcategoría -->
-    <div class="subcategoria-selector-movil" id="subcategoriaSelector">
-        <select id="subcategoria" onchange="seleccionarSubcategoriaDesdeMenu()">
-            <option value="TODOS">Todos</option>
-            <option value="CONJUNTOS">Conjuntos</option>
-            <option value="BUZOS">Buzos</option>
-            <option value="CAMPERAS">Camperas / Rompevientos</option>
-            <option value="REMERAS">Remeras / Camisetas</option>
-            <option value="PANTALONES">Cargos / Jeans / Joggings</option>
-            <option value="CALZAS">Calzas</option>
-            <option value="MALLAS">Mallas</option>
-            <option value="SHORTS">Bermudas / Shorts</option>
-            <option value="ACCESORIOS">Accesorios</option>
-            <option value="MOCHILAS">Mochilas</option>
-        </select>
-    </div>
-
-    <!-- Contenedor de productos -->
     <div class="catalog-container">
         <div id="products"></div>
     </div>
 
-    <!-- Modal de imagen -->
-    <div id="imgModal" tabindex="-1" aria-hidden="true">
-        <img src="" alt="">
+    <div id="imgModal" tabindex="-1">
+        <img src="" alt="Vista ampliada del producto">
     </div>
 
-    <!-- Botón flotante para volver arriba -->
-    <button id="scrollTopBtn" title="Volver arriba"><i class="fa-solid fa-circle-chevron-up"></i></button>
+    <div id="floating-buttons">
+        <button id="scrollTopBtn" class="floating-btn" title="Volver arriba">
+            <i class="fa-solid fa-circle-chevron-up"></i>
+        </button>
+        <a href="https://wa.me/+5493512009221" target="_blank" rel="noopener noreferrer" id="whatsappBtn" class="floating-btn" title="Contactar por WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+    </div>
 
-    <!-- Script de configuración y catálogo -->
     <script src="config.js"></script>
     <script src="catalogo.js"></script>
 
@@ -108,5 +106,4 @@
         <p>© 2025 Lion Kids CBA. Todos los derechos reservados.</p>
     </footer>
 </body>
-
 </html>
