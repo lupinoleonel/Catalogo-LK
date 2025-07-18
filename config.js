@@ -34,6 +34,3 @@ const textos = {
       etiquetaPromo: "3 artículos surtidos"
   }
 };
-
-
-

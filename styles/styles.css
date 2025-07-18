@@ -14,14 +14,17 @@
     --color-terciario: #6d3f25;   /* Marrón claro */
     --color-resaltar: #52D8DB;     /* Celeste claro */
     --color-fondo: #f9d8ec;       /* Rosa claro */
+    --color-nuevo: #3498db;        /* Azul para "Nuevo" */
+    --color-reingreso: #9b59b6;     /* Violeta para "Reingreso" */
+    --color-ultimas: #e67e22;      /* Naranja para "Últimas unidades" */
 }
 
 body {
     background-color: var(--color-fondo);
     font-family: 'Poppins', sans-serif;
-    position: relative; /* Ayuda a un mejor posicionamiento del footer */
+    position: relative;
     min-height: 100vh;
-    padding-bottom: 120px; /* Espacio para el footer */
+    padding-bottom: 120px;
 }
 
 /* =================================================================== */
@@ -259,17 +262,47 @@ nav a:hover {
 }
 
 .product {
+    position: relative; /* Clave para posicionar las etiquetas */
     background: white;
     border-radius: 15px;
     box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
     padding: 15px;
     text-align: center;
     transition: transform 0.3s ease-in-out;
+    border: 2px solid transparent; /* Borde transparente por defecto */
 }
 
 .product:hover {
     transform: translateY(-5px);
 }
+
+
+/* BORDE ESPECIAL SOLO PARA PRODUCTOS NUEVOS */
+.product.product-nuevo {
+    border-color: var(--color-nuevo);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+/* NUEVO ESTILO DE ETIQUETAS DE ESTADO */
+.etiqueta-estado {
+    position: absolute;
+    top: 10px;
+    right: -5px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+    transform: rotate(10deg);
+    z-index: 10;
+}
+
+/* Colores para cada tipo de etiqueta */
+.etiqueta-nuevo { background-color: var(--color-nuevo); }
+.etiqueta-reingreso { background-color: var(--color-reingreso); }
+.etiqueta-ultimas { background-color: var(--color-ultimas); }
+
 
 .product img {
     width: 100%;
@@ -288,48 +321,41 @@ nav a:hover {
 .product h4 {
     font-size: 1rem;
     margin: 10px 0;
-    min-height: 40px; /* Para alinear nombres de 1 o 2 líneas */
+    min-height: 40px;
 }
 
 .price-container {
     margin-top: 10px;
-    padding: 10px;
+    padding: 10px 15px; /* Ajustamos un poco el padding */
     background: var(--color-principal);
     border-radius: 8px;
     color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Espacio entre las dos líneas de precio */
 }
 
-.price {
+.linea-precio {
+    display: flex;
+    justify-content: space-between; /* ¡La clave! Empuja los elementos a los extremos */
+    align-items: center;
+}
+
+.etiqueta-precio {
+    font-size: 16px;
+    font-weight: 500; /* Un poco más liviano */
+
+}
+
+.valor-precio {
     font-size: 18px;
     font-weight: bold;
 }
 
-.promo-price {
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--color-resaltar);
+.valor-precio.promo {
+    color: var(--color-resaltar); /* Mantenemos el color especial para la promo */
 }
 
-/* --- ESTILOS PARA STOCK BAJO --- */
-.product.low-stock {
-    position: relative;
-    border: 2px solid var(--color-principal);
-}
-
-.low-stock-label {
-    position: absolute;
-    top: 10px;
-    right: -5px;
-    background-color: var(--color-principal);
-    color: white;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 5px;
-    box-shadow: 1px 1px 5px rgba(0,0,0,0.3);
-    transform: rotate(10deg);
-    z-index: 10;
-}
 
 /* =================================================================== */
 /* --- MODAL DE IMAGEN --- */
@@ -425,6 +451,18 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
+
+/* CRÉDITOS DE DESARROLLADOR */
+.dev-credit {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #aaa; /* Un gris claro para que sea sutil */
+}
+.dev-credit a {
+    color: var(--color-resaltar);
+    font-weight: bold;
+}
+
 
 /* =================================================================== */
 /* --- DISEÑO RESPONSIVE (MEDIA QUERIES) --- */

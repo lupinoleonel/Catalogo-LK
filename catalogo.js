@@ -1,3 +1,11 @@
+// =================================================================================
+// C A T Á L O G O   D E   P R O D U C T O S  -  L I O N   K I D S
+// =================================================================================
+// Descripción: Script para cargar, filtrar y mostrar productos desde Google Sheets.
+// Versión: 2.0 (Sistema de Etiquetas Mejorado)
+// =================================================================================
+
+
 // =================================================================
 // ESTADO Y CONFIGURACIÓN DEL CATÁLOGO
 // =================================================================
@@ -84,16 +92,31 @@ function updateActiveButtons(container, selector, activeValue) {
     });
 }
 
-function generateProductHTML(item) {
-    const lowStockLabel = item.isLowStock ? '<div class="low-stock-label">¡Últimas unidades!</div>' : '';
+function generarHTMLProducto(item) {
+    let etiquetaHTML = '';
 
+    if (item.estado === 'nuevo') {
+        etiquetaHTML = '<div class="etiqueta-estado etiqueta-nuevo">Nuevo</div>';
+    } else if (item.estado === 'reingreso') {
+        etiquetaHTML = '<div class="etiqueta-estado etiqueta-reingreso">Reingreso</div>';
+    } else if (item.esDeBajoStock) {
+        etiquetaHTML = `<div class="etiqueta-estado etiqueta-ultimas">¡Últimas ${item.stock}!</div>`;
+    }
+
+    // El return ahora contiene la nueva estructura para los precios
     return `
-        ${lowStockLabel}
+        ${etiquetaHTML}
         <img src="${item.imagen}" alt="${item.nombre}" loading="lazy" onerror="this.onerror=null; this.src='img/imagen-generica.png';">
         <h4>${item.nombre}</h4>
         <div class="price-container">
-            <p class="price">${textos[tipo].etiquetaPrecio}: $${formatPrice(item.precio)}</p>
-            <p class="promo-price">${textos[tipo].etiquetaPromo}: $${formatPrice(item.precioPromo)}</p>
+            <div class="linea-precio">
+                <span class="etiqueta-precio">${textos[tipo].etiquetaPrecio}:</span>
+                <span class="valor-precio">$${formatPrice(item.precio)}</span>
+            </div>
+            <div class="linea-precio">
+                <span class="etiqueta-precio">${textos[tipo].etiquetaPromo}:</span>
+                <span class="valor-precio promo">$${formatPrice(item.precioPromo)}</span>
+            </div>
         </div>
     `;
 }
@@ -152,17 +175,18 @@ async function loadProducts() {
             return;
         }
 
-        const productFragment = document.createDocumentFragment();
-        let productsAdded = 0;
+        // 1. Crear un array temporal para guardar los productos a mostrar
+        let productosParaMostrar = [];
 
         data.table.rows.forEach(row => {
             if (!row || !row.c) return;
 
-            const stockValue = row.c[6]?.v ? String(row.c[6].v).trim().toLowerCase() : "sin stock";
-            
-            // Lógica de stock mejorada
-            if (stockValue === "sin stock") {
-                return; // Si dice "sin stock", no lo mostramos y saltamos al siguiente.
+            const stockCrudo = row.c[6]?.v;
+            const estadoCrudo = row.c[7]?.v;
+            const stockNumerico = parseFloat(stockCrudo);
+
+            if (isNaN(stockNumerico) || stockNumerico <= 0) {
+                return; 
             }
 
             const item = {
@@ -170,29 +194,47 @@ async function loadProducts() {
                 precio: tipo === 'mayorista' ? row.c[4]?.v : row.c[2]?.v,
                 precioPromo: tipo === 'mayorista' ? row.c[2]?.v : row.c[3]?.v,
                 imagen: row.c[5]?.v || "img/imagen-generica.png",
-                stock: stockValue,
+                stock: stockNumerico,
+                estado: estadoCrudo ? String(estadoCrudo).trim().toLowerCase() : '',
                 tipoPrenda: row.c[0]?.v ? String(row.c[0].v).substring(0, 4).toUpperCase() : ""
             };
 
-            // Verificamos si tiene stock bajo
-            const stockNumerico = parseFloat(item.stock);
-            item.isLowStock = !isNaN(stockNumerico) && stockNumerico <= LOW_STOCK_THRESHOLD;
+            item.esDeBajoStock = item.stock <= LOW_STOCK_THRESHOLD;
 
             const inSearch = item.nombre.toLowerCase().includes(state.searchTerm.toLowerCase());
             const inSubcat = state.subcategoria === "TODOS" || subcategorias[state.subcategoria]?.includes(item.tipoPrenda);
             
             if (inSearch && inSubcat) {
-                const productDiv = document.createElement('div');
-                // Añadimos la clase 'low-stock' si corresponde
-                productDiv.className = `product ${item.isLowStock ? 'low-stock' : ''}`;
-                productDiv.innerHTML = generateProductHTML(item);
-                productFragment.appendChild(productDiv);
-                productsAdded++;
+                // En lugar de crear el HTML aquí, guardamos el objeto 'item' completo
+                productosParaMostrar.push(item);
             }
         });
 
+        // 2. Ordenar la lista de productos (SOLO si estamos en la vista "TODOS")
+        if (state.subcategoria === 'TODOS') {
+            
+            // Función para asignar una prioridad a cada estado
+            const obtenerPrioridad = (item) => {
+                switch (item.estado) {
+                    case 'nuevo': return 1;      // Máxima prioridad
+                    case 'reingreso': return 2;  // Segunda prioridad
+                    default: return 3;           // Todos los demás
+                }
+            };
+
+            productosParaMostrar.sort((a, b) => obtenerPrioridad(a) - obtenerPrioridad(b));
+        }
+
+        // 3. Crear el HTML a partir de la lista ya filtrada y (posiblemente) ordenada
         dom.productsContainer.innerHTML = '';
-        if (productsAdded > 0) {
+        if (productosParaMostrar.length > 0) {
+            const productFragment = document.createDocumentFragment();
+            productosParaMostrar.forEach(item => {
+                const productDiv = document.createElement('div');
+                productDiv.className = `product ${item.estado === 'nuevo' ? 'product-nuevo' : ''}`;
+                productDiv.innerHTML = generarHTMLProducto(item);
+                productFragment.appendChild(productDiv);
+            });
             dom.productsContainer.appendChild(productFragment);
         } else {
             dom.productsContainer.innerHTML = '<p>No se encontraron productos con esos filtros.</p>';
